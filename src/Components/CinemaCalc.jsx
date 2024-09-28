@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import axios from "axios";
+import React, { useState, useEffect } from "react";
 
 export default function CinemaCalc() {
   const [entries, setEntries] = useState([
@@ -8,7 +9,7 @@ export default function CinemaCalc() {
   const [editingId, setEditingId] = useState(null);
   const [newEntry, setNewEntry] = useState({ name: "", price: "", markup: "" });
   const [showModal, setShowModal] = useState(false);
-
+  const [apiCheck, setApiCheck] = useState([]);
   const handleEdit = (id) => {
     setEditingId(id);
   };
@@ -54,7 +55,15 @@ export default function CinemaCalc() {
   const totalExpense = entries
     .reduce((acc, entry) => acc + Number(entry.total), 0)
     .toFixed(2);
-
+  const getEntries = async () => {
+    const datas = await axios.get("http://localhost:5084/api/Expenses");
+    setApiCheck(datas?.data);
+    const finalData = datas?.data;
+    return finalData;
+  };
+  useEffect(() => {
+    getEntries();
+  }, []);
   return (
     <div className="p-5">
       <h1 className="text-2xl font-bold mb-4"> Expense Calculator</h1>
