@@ -58,16 +58,20 @@ export default function CinemaCalc() {
               100
           ).toFixed(2),
         };
+
         await editEntry({ id, payload: updatedEntry });
+
         const updatedEntries = entries.map((entry) =>
           entry.expenseId === id ? updatedEntry : entry
         );
         setEntries(updatedEntries);
+
         const newTotal = updatedEntries.reduce(
           (sum, entry) => sum + parseFloat(entry.totalPrice || 0),
           0
         );
         setTotalSum(newTotal.toFixed(2));
+
         setEditingId(null);
       } else {
         console.error(`Entry with id ${id} not found`);
@@ -105,23 +109,35 @@ export default function CinemaCalc() {
     setEntries(updatedEntries);
   };
 
-  const handleAddEntry = async () => {
-    const totalPrice = (
-      Number(newEntry.price) +
-      (Number(newEntry.price) * Number(newEntry.markup)) / 100
-    ).toFixed(2);
-    const entryToAdd = {
-      name: newEntry.name,
-      price: newEntry.price,
-      percentageMarkup: newEntry.percentageMarkup,
-      totalPrice,
-    };
-    const addedEntry = await addEntry({ payload: entryToAdd });
-    setEntries([...entries, entryToAdd]);
-    setTotalSum(totalSum + totalPrice);
-
-    setNewEntry({ name: "", price: "", percentageMarkup: "" });
-    setShowModal(false);
+  const handleAddEntry = async (newEntry) => {
+    try {
+      const totalPrice = (
+        Number(newEntry.price) +
+        (Number(newEntry.price) * Number(newEntry.percentageMarkup)) / 100
+      ).toFixed(2);
+      const entryToAdd = {
+        name: newEntry.name,
+        price: newEntry.price,
+        percentageMarkup: newEntry.percentageMarkup,
+        totalPrice,
+      };
+      const response = await addEntry({ payload: entryToAdd });
+      if (response && response.data) {
+        setEntries([
+          ...entries,
+          { ...entryToAdd, expenseId: response.data.expenseId },
+        ]);
+        setTotalSum((prevSum) =>
+          (Number(prevSum) + Number(totalPrice)).toFixed(2)
+        );
+        setNewEntry({ name: "", price: "", percentageMarkup: "" });
+        setShowModal(false);
+      } else {
+        console.error("Failed to add entry.");
+      }
+    } catch (error) {
+      console.error("Error adding entry:", error);
+    }
   };
 
   return (
